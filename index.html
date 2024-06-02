@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infinite Scrolling Website</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        #container {
+            width: 100%;
+        }
+
+        .shape {
+            width: 100px;
+            height: 100px;
+            margin: 50px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            animation: bounce 2s infinite;
+        }
+
+        .shape img {
+            display: none;
+            width: 100px;
+            height: 100px;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .shape:hover img {
+            display: block;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-150px);
+            }
+            60% {
+                transform: translateY(-75px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.getElementById('container');
+            let count = 0;
+
+            function generateRandomColor() {
+                const letters = '0123456789ABCDEF';
+                let color = '#';
+                for (let i = 0; i < 6; i++) {
+                    color += letters[Math.floor(Math.random() * 16)];
+                }
+                return color;
+            }
+
+            function createShape() {
+                const shape = document.createElement('div');
+                shape.classList.add('shape');
+                shape.style.backgroundColor = generateRandomColor();
+
+                // Change shape between square and circle
+                if (count % 2 === 0) {
+                    shape.style.borderRadius = '50%';
+                } else {
+                    shape.style.borderRadius = '0';
+                }
+
+                // Add image inside shape
+                const img = document.createElement('img');
+                img.src = 'https://grabify.link/EQMUZP'; // Replace with your image URL
+                img.alt = 'Hover Image';
+                shape.appendChild(img);
+
+                container.appendChild(shape);
+                count++;
+            }
+
+            function infiniteScroll() {
+                if (window.innerHeight + window.scrollY >= document.body.offsetHeight) {
+                    createShape();
+                }
+            }
+
+            window.addEventListener('scroll', infiniteScroll);
+
+            // Initial shapes
+            for (let i = 0; i < 10; i++) {
+                createShape();
+            }
+        });
+    </script>
+</body>
+</html>
