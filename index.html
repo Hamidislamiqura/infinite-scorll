@@ -3,107 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Infinite Scrolling Website</title>
+    <title>Flappy Bird</title>
     <style>
-        body, html {
+        body {
             margin: 0;
             padding: 0;
-            overflow-x: hidden;
-            font-family: Arial, sans-serif;
+            overflow: hidden;
         }
 
-        #container {
-            width: 100%;
-        }
-
-        .shape {
-            width: 100px;
-            height: 100px;
-            margin: 50px auto;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            animation: bounce 2s infinite;
-        }
-
-        .shape img {
-            display: none;
-            width: 100px;
-            height: 100px;
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
-
-        .shape:hover img {
+        canvas {
             display: block;
-        }
-
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% {
-                transform: translateY(0);
-            }
-            40% {
-                transform: translateY(-150px);
-            }
-            60% {
-                transform: translateY(-75px);
-            }
+            margin: 0 auto;
+            background: #70c5ce;
         }
     </style>
 </head>
 <body>
-    <div id="container"></div>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const container = document.getElementById('container');
-            let count = 0;
+        const canvas = document.getElementById('gameCanvas');
+        const context = canvas.getContext('2d');
 
-            function generateRandomColor() {
-                const letters = '0123456789ABCDEF';
-                let color = '#';
-                for (let i = 0; i < 6; i++) {
-                    color += letters[Math.floor(Math.random() * 16)];
+        const bird = {
+            x: 50,
+            y: canvas.height / 2,
+            radius: 20,
+            velocity: 0,
+            gravity: 0.5,
+            jumpStrength: -10
+        };
+
+        const gravity = 0.5;
+        const jumpStrength = -10;
+        const pipes = [];
+        const pipeGap = 200;
+        const pipeWidth = 50;
+        const pipeSpeed = 2;
+        let score = 0;
+        let gameover = false;
+
+        function drawBird() {
+            context.beginPath();
+            context.arc(bird.x, bird.y, bird.radius, 0, Math.PI * 2);
+            context.fillStyle = 'yellow';
+            context.fill();
+            context.closePath();
+        }
+
+        function drawPipes() {
+            for (let i = 0; i < pipes.length; i++) {
+                const pipe = pipes[i];
+                context.fillStyle = 'green';
+                context.fillRect(pipe.x, 0, pipeWidth, pipe.top);
+                context.fillRect(pipe.x, pipe.top + pipeGap, pipeWidth, canvas.height - (pipe.top + pipeGap));
+            }
+        }
+
+        function movePipes() {
+            for (let i = 0; i < pipes.length; i++) {
+                const pipe = pipes[i];
+                pipe.x -= pipeSpeed;
+
+                if (pipe.x + pipeWidth <= 0) {
+                    pipes.splice(i, 1);
+                    i--;
                 }
-                return color;
+
+                if (pipe.x === 100) {
+                    createPipe();
+                    score++;
+                }
+
+                // Collision detection
+                if (bird.x + bird.radius > pipe.x && bird.x - bird.radius < pipe.x + pipeWidth) {
+                    if (bird.y - bird.radius < pipe.top || bird.y + bird.radius > pipe.top + pipeGap) {
+                        gameover = true;
+                    }
+                }
+            }
+        }
+
+        function createPipe() {
+            const pipeHeight = Math.random() * (canvas.height - pipeGap);
+            pipes.push({
+                x: canvas.width,
+                top: pipeHeight
+            });
+        }
+
+        function drawScore() {
+            context.fillStyle = 'black';
+            context.font = '24px Arial';
+            context.fillText('Score: ' + score, 10, 30);
+        }
+
+        function update() {
+            if (!gameover) {
+                bird.velocity += bird.gravity;
+                bird.y += bird.velocity;
+
+                if (bird.y + bird.radius > canvas.height || bird.y - bird.radius < 0) {
+                    gameover = true;
+                }
+
+                movePipes();
             }
 
-            function createShape() {
-                const shape = document.createElement('div');
-                shape.classList.add('shape');
-                shape.style.backgroundColor = generateRandomColor();
-
-                // Change shape between square and circle
-                if (count % 2 === 0) {
-                    shape.style.borderRadius = '50%';
-                } else {
-                    shape.style.borderRadius = '0';
-                }
-
-                // Add image inside shape
-                const img = document.createElement('img');
-                img.src = 'https://grabify.link/EQMUZP'; // Replace with your image URL
-                img.alt = 'Hover Image';
-                shape.appendChild(img);
-
-                container.appendChild(shape);
-                count++;
+            if (gameover) {
+                context.fillStyle = 'black';
+                context.font = '40px Arial';
+                context.fillText('Game Over', 100, canvas.height / 2);
             }
+        }
 
-            function infiniteScroll() {
-                if (window.innerHeight + window.scrollY >= document.body.offsetHeight) {
-                    createShape();
-                }
+        function jump() {
+            if (!gameover) {
+                bird.velocity = bird.jumpStrength;
             }
+        }
 
-            window.addEventListener('scroll', infiniteScroll);
-
-            // Initial shapes
-            for (let i = 0; i < 10; i++) {
-                createShape();
+        document.addEventListener('keydown', function (event) {
+            if (event.code === 'Space') {
+                jump();
             }
         });
+
+        function gameLoop() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawBird();
+            drawPipes();
+            drawScore();
+            update();
+
+            if (!gameover) {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        createPipe();
+        gameLoop();
     </script>
 </body>
 </html>
